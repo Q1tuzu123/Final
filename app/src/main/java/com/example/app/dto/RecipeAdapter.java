@@ -14,54 +14,72 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.app.R;
 
+import java.util.List;import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
+
 import java.util.List;
 
-public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.ViewHolder> {
+public class RecipeAdapter extends RecyclerView.Adapter<RecipeAdapter.RecipeViewHolder> {
 
-    public interface OnRecipeClickListener {
-        void onRecipeClick(int recipeId);
+    private List<Result> recipes;
+    private final OnRecipeClickListener clickListener;
+
+    public RecipeAdapter(List<Result> recipes, OnRecipeClickListener clickListener) {
+        this.recipes = recipes;
+        this.clickListener = clickListener;
     }
 
-    private List<Result> recipeList;
-    private Context context;
-    private OnRecipeClickListener listener;
-
-    public RecipeAdapter(List<Result> recipeList, Context context, OnRecipeClickListener listener) {
-        this.recipeList = recipeList;
-        this.context = context;
-        this.listener = listener;
+    public void setRecipes(List<Result> recipes) {
+        this.recipes = recipes;
+        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.recipe_item, parent, false);
-        return new ViewHolder(view);
+    public RecipeViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.recipe_item, parent, false);
+        return new RecipeViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Result recipe = recipeList.get(position);
-        holder.titleTextView.setText(recipe.getTitle());
+    public void onBindViewHolder(@NonNull RecipeViewHolder holder, int position) {
+        Result recipe = recipes.get(position);
+        holder.title.setText(recipe.getTitle());
+        Glide.with(holder.itemView.getContext())
+                .load(recipe.getImage())
+                .placeholder(R.drawable.placeholder_image)
+                .error(R.drawable.error_image)
+                .into(holder.image);
 
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onRecipeClick(recipe.getId());
-            }
-        });
+        holder.itemView.setOnClickListener(v -> clickListener.onRecipeClick(recipe));
     }
 
     @Override
     public int getItemCount() {
-        return recipeList.size();
+        return recipes.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView titleTextView;
+    public interface OnRecipeClickListener {
+        void onRecipeClick(Result recipe);
+    }
 
-        public ViewHolder(@NonNull View itemView) {
+    static class RecipeViewHolder extends RecyclerView.ViewHolder {
+        TextView title;
+        ImageView image;
+
+        public RecipeViewHolder(@NonNull View itemView) {
             super(itemView);
-            titleTextView = itemView.findViewById(R.id.recipeTitle);
+            title = itemView.findViewById(R.id.recipeTitle);
+            image = itemView.findViewById(R.id.recipeImage);
         }
     }
 }
